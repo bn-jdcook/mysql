@@ -1,0 +1,32 @@
+name: Build
+
+on:
+    push:
+
+jobs:
+    build:
+        runs-on: ubuntu-latest
+        steps:
+            - name: Checkout
+              uses: actions/checkout@v3
+            - name: Set up QEMU
+              uses: docker/setup-qemu-action@v2
+            - name: Set up Docker Buildx
+              id: buildx
+              uses: docker/setup-buildx-action@v2
+            - name: Inspect builder
+              run: |
+                  echo "Name:      ${{ steps.buildx.outputs.name }}"
+                  echo "Endpoint:  ${{ steps.buildx.outputs.endpoint }}"
+                  echo "Status:    ${{ steps.buildx.outputs.status }}"
+                  echo "Flags:     ${{ steps.buildx.outputs.flags }}"
+                  echo "Platforms: ${{ steps.buildx.outputs.platforms }}"
+            - name: Run base read-yaml action
+              id: main
+              uses: KJ002/read-yaml@main # You may wish to replace main with a version tag such as '1.6' etc.
+              with:
+                  file: "./docker-compose.yml" # File to read from
+                  key-path: '["services", "mysql", "image"]' # Access the runs key then the using key and retuns the value.
+            - name: Build Base
+              run: |
+                  docker build -t "${{ steps.main.outputs.data }}" .
